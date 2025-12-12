@@ -5,121 +5,94 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rotina Logística</title>
     
+    <!-- Scripts Visuais -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- FIREBASE (O mesmo do teste que funcionou) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
     <style>
-        /* ESTILO PURO (Carrega instantaneamente) */
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; background-color: #f1f5f9; color: #333; height: 100vh; display: flex; flex-direction: column; }
+        body { -webkit-tap-highlight-color: transparent; }
         .hidden { display: none !important; }
-        
-        /* Login Card */
-        .center-screen { display: flex; align-items: center; justify-content: center; height: 100%; padding: 20px; flex-direction: column; }
-        .card { background: white; width: 100%; max-width: 400px; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 5px solid #991b1b; }
-        
-        /* Inputs & Buttons */
-        input { width: 100%; padding: 14px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; outline: none; }
-        input:focus { border-color: #991b1b; box-shadow: 0 0 0 2px rgba(153, 27, 27, 0.1); }
-        
-        button { width: 100%; padding: 14px; background-color: #991b1b; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: opacity 0.2s; }
-        button:active { opacity: 0.8; }
-        button:disabled { background-color: #94a3b8; cursor: wait; }
-
-        /* Foto */
-        .avatar { width: 90px; height: 90px; margin: 0 auto 20px; border-radius: 50%; border: 4px solid #fee2e2; overflow: hidden; background: #fff; display: flex; align-items: center; justify-content: center; }
-        .avatar img { width: 100%; height: 100%; object-fit: cover; }
-
-        /* Rodapé de Diagnóstico */
-        #sys-log { font-size: 11px; color: #64748b; margin-top: 20px; text-align: center; font-family: monospace; border-top: 1px solid #e2e8f0; padding-top: 10px; width: 100%; max-width: 400px; }
-        
-        /* App UI */
-        .app-header { background: #991b1b; color: white; padding: 15px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .list-item { background: white; padding: 16px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px; cursor: pointer; }
-        .checked-bg { background-color: #fef2f2; }
-        .checked-text { text-decoration: line-through; color: #94a3b8; }
-        .date-nav { background: white; margin: 15px; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .date-display { border: none; font-size: 16px; font-weight: bold; text-align: center; color: #333; background: transparent; width: 140px; }
+        input:focus { ring: 2px solid #991b1b; outline: none; border-color: #991b1b; }
     </style>
 </head>
-<body>
+<body class="bg-slate-100 font-sans text-slate-800 min-h-screen">
 
-    <!-- TELA LOGIN -->
-    <div id="loginScreen" class="center-screen">
-        <div class="card">
-            <div class="avatar">
-                <img src="./perfil.jpg" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
-                <!-- Ícone Backup (SVG Inline) -->
-                <svg style="display:none; width:40px; height:40px;" viewBox="0 0 24 24" fill="none" stroke="#991b1b" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+    <!-- TELA DE LOGIN -->
+    <div id="loginScreen" class="flex items-center justify-center min-h-screen p-4 flex-col">
+        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md border-t-4 border-red-800">
+            <div class="text-center mb-6">
+                <!-- Foto -->
+                <div class="w-24 h-24 mx-auto mb-4 rounded-full border-4 border-red-100 overflow-hidden shadow-sm relative bg-white flex items-center justify-center">
+                    <img src="./perfil.jpg" class="w-full h-full object-cover" onerror="this.style.display='none'; document.getElementById('fallbackIcon').classList.remove('hidden')">
+                    <div id="fallbackIcon" class="hidden">
+                        <i data-lucide="truck" class="w-10 h-10 text-red-300"></i>
+                    </div>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-800">Logística</h1>
+                <p class="text-slate-500 text-sm">Controle de Operações</p>
             </div>
             
-            <h2 style="text-align: center; margin: 0; color: #0f172a;">Logística</h2>
-            <p style="text-align: center; margin: 5px 0 20px; font-size: 13px; color: #64748b;">Controlo de Operações</p>
-
-            <div id="form-area">
-                <input type="email" id="email" placeholder="E-mail">
-                <input type="password" id="password" placeholder="Palavra-passe">
-                <button id="btnEntrar" onclick="fazerLogin()" disabled>A INICIAR...</button>
-            </div>
-            
-            <p id="errorMsg" style="color: #ef4444; font-size: 13px; text-align: center; margin-top: 15px; font-weight: bold; display: none;"></p>
-        </div>
-
-        <!-- DIAGNÓSTICO VISÍVEL -->
-        <div id="sys-log">Estado: A iniciar HTML...</div>
-    </div>
-
-    <!-- TELA APP -->
-    <div id="appScreen" class="hidden">
-        <div class="app-header">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:32px; height:32px; border-radius:50%; background:#7f1d1d; overflow:hidden; border:1px solid #fca5a5;">
-                    <img src="./perfil.jpg" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">
+            <div class="space-y-4">
+                <div>
+                    <input type="email" id="email" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="E-mail">
                 </div>
                 <div>
-                    <div style="font-weight:bold; font-size:14px; line-height:1.2;">Logística</div>
-                    <div id="userDisplay" style="font-size:10px; opacity:0.8;">...</div>
+                    <input type="password" id="password" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Palavra-passe">
                 </div>
+                
+                <button onclick="cliqueEntrar()" id="btnLogin" class="w-full py-3 bg-red-700 text-white rounded-lg hover:bg-red-800 font-bold shadow-md active:scale-95 transition-all flex justify-center items-center gap-2">
+                    ENTRAR
+                </button>
             </div>
-            <button onclick="sair()" style="background:rgba(0,0,0,0.2); width:auto; padding:5px 10px; font-size:12px; border:none; color:white;">Sair</button>
-        </div>
-
-        <div class="date-nav">
-            <button onclick="mudarData(-1)" style="background:none; border:none; color:#64748b; width:auto; font-size:20px;">❮</button>
-            <input type="date" id="dateInput" class="date-display">
-            <button onclick="mudarData(1)" style="background:none; border:none; color:#64748b; width:auto; font-size:20px;">❯</button>
-        </div>
-
-        <div id="checklist" style="margin:0 15px; background:white; border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.05);"></div>
-
-        <div style="padding:15px;">
-            <button onclick="copiarResumo()" style="background:white; color:#991b1b; border:2px solid #fee2e2;">COPIAR RESUMO</button>
+            
+            <p id="statusMsg" class="mt-4 text-center text-xs font-mono text-green-600">Sistema Pronto.</p>
         </div>
     </div>
 
-    <!-- O JAVASCRIPT ESTÁ AQUI EMBAIXO E CARREGA DINAMICAMENTE -->
+    <!-- TELA DA APLICAÇÃO -->
+    <div id="appScreen" class="hidden pb-20">
+        <header class="bg-red-900 text-white p-6 sticky top-0 z-20 shadow-lg">
+            <div class="flex justify-between items-center max-w-2xl mx-auto">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full border-2 border-red-400 overflow-hidden bg-red-800">
+                        <img src="./perfil.jpg" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-xl leading-none">Logística</h1>
+                        <p id="userEmailDisplay" class="text-xs text-red-200 opacity-90 mt-1">...</p>
+                    </div>
+                </div>
+                <button onclick="sair()" class="bg-red-800 p-2 rounded-lg hover:bg-red-700 transition-colors border border-red-700">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="max-w-2xl mx-auto p-4">
+            <div class="bg-white p-2 rounded-xl shadow-sm mb-4 flex justify-between items-center border border-slate-100">
+                <button onclick="mudarData(-1)" class="p-3 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded-lg"><i data-lucide="chevron-left"></i></button>
+                <div class="flex items-center gap-2">
+                    <i data-lucide="calendar" class="w-5 h-5 text-red-700"></i>
+                    <input type="date" id="dateInput" class="font-bold text-lg text-slate-700 text-center outline-none bg-transparent uppercase">
+                </div>
+                <button onclick="mudarData(1)" class="p-3 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded-lg"><i data-lucide="chevron-right"></i></button>
+            </div>
+
+            <div id="lista" class="bg-white rounded-xl shadow-sm overflow-hidden divide-y divide-slate-50 border border-slate-100"></div>
+            
+            <button onclick="copiarResumo()" class="mt-6 w-full py-4 bg-white text-red-700 border-2 border-red-100 rounded-xl font-bold flex items-center justify-center gap-2 shadow-sm hover:bg-red-50 transition-colors active:scale-95">
+                <i data-lucide="copy"></i> Copiar Resumo
+            </button>
+        </main>
+    </div>
+
     <script>
-        // --- 1. FUNÇÕES DE LOG ---
-        function log(msg, color) {
-            const el = document.getElementById('sys-log');
-            el.innerText = "Estado: " + msg;
-            if(color) el.style.color = color;
-            console.log(msg);
-        }
-
-        // PROVA DE VIDA IMEDIATA
-        log("JS Iniciado. A preparar download...", "blue");
-
-        // --- 2. CARREGADOR DINÂMICO ---
-        function loadScript(url) {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = url;
-                script.async = true;
-                script.onload = () => resolve(url);
-                script.onerror = () => reject(url);
-                document.body.appendChild(script);
-            });
-        }
-
-        // --- 3. CONFIGURAÇÃO FIREBASE ---
+        // --- CONFIGURAÇÃO ---
         const firebaseConfig = {
             apiKey: "AIzaSyCgWfdAVTVFhKRS-BLWGJrIt68hdq-OMhg",
             authDomain: "logisticacloud-1cc32.firebaseapp.com",
@@ -129,103 +102,80 @@
             appId: "1:883823898286:web:6c22160dad0cd403a0873f"
         };
 
-        let auth, db, usuarioAtual;
+        let auth, db;
         let dataAtual = new Date().toISOString().split('T')[0];
+        let usuarioAtual = null;
 
-        // --- 4. INICIALIZAÇÃO ASSÍNCRONA ---
-        async function init() {
-            log("A baixar Google Services...");
-            
-            try {
-                // Tenta baixar um por um. Se a rede bloquear, vai cair no 'catch'.
-                await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
-                await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
-                await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js');
-                
-                log("Serviços carregados. A conectar...");
-                
+        // --- INICIALIZAÇÃO IMEDIATA ---
+        // Executa assim que o script carrega (igual ao teste preto)
+        try {
+            if (typeof firebase === 'undefined') {
+                document.getElementById('statusMsg').innerText = "ERRO: Firebase bloqueado.";
+                document.getElementById('statusMsg').className = "mt-4 text-center text-xs font-mono text-red-600";
+            } else {
                 firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
                 db = firebase.firestore();
-
-                log("Sistema Online. Pronto.", "green");
                 
-                const btn = document.getElementById('btnEntrar');
-                btn.innerText = "ENTRAR";
-                btn.disabled = false;
-
-                auth.onAuthStateChanged(user => {
+                // Monitoramento de Login
+                auth.onAuthStateChanged((user) => {
                     if (user) {
                         usuarioAtual = user;
-                        entrarApp();
+                        entrarNoApp();
                     }
                 });
-
-            } catch (error) {
-                log("FALHA: Rede bloqueou o Google.", "red");
-                const btn = document.getElementById('btnEntrar');
-                btn.innerText = "SEM REDE";
-                btn.style.backgroundColor = "#64748b";
-                
-                document.getElementById('errorMsg').style.display = "block";
-                document.getElementById('errorMsg').innerText = "A rede da empresa bloqueou o carregamento do sistema.";
             }
+        } catch (e) {
+            alert("Erro fatal: " + e.message);
         }
 
-        // --- 5. FUNÇÕES DE LOGIN ---
-        function fazerLogin() {
+        // Carregar ícones se disponível
+        if (window.lucide) lucide.createIcons();
+
+        // --- LOGIN (Lógica do Teste) ---
+        function cliqueEntrar() {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('password').value;
-            const btn = document.getElementById('btnEntrar');
-            const errBox = document.getElementById('errorMsg');
+            const btn = document.getElementById('btnLogin');
+            const status = document.getElementById('statusMsg');
 
             if (!email || !pass) {
-                errBox.style.display = 'block';
-                errBox.innerText = "Preencha todos os campos.";
+                status.innerText = "Preencha tudo.";
+                status.className = "mt-4 text-center text-xs font-mono text-red-600";
                 return;
             }
 
             btn.innerText = "A VERIFICAR...";
             btn.disabled = true;
-            errBox.style.display = 'none';
+            status.innerText = "Conectando...";
+            status.className = "mt-4 text-center text-xs font-mono text-blue-600";
 
             auth.signInWithEmailAndPassword(email, pass)
-                .catch(err => {
-                    if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-                        return auth.createUserWithEmailAndPassword(email, pass);
-                    }
-                    throw err;
+                .then(() => {
+                    status.innerText = "Sucesso!";
+                    // onAuthStateChanged muda a tela
                 })
-                .catch(err => {
+                .catch((error) => {
+                    // Erro: Tenta criar conta
+                    if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                         return auth.createUserWithEmailAndPassword(email, pass);
+                    }
+                    throw error;
+                })
+                .catch((error) => {
                     btn.innerText = "ENTRAR";
                     btn.disabled = false;
-                    errBox.style.display = 'block';
-                    let msg = err.code;
-                    if(msg === 'auth/network-request-failed') msg = "Erro de conexão (Firewall).";
-                    errBox.innerText = "Erro: " + msg;
+                    status.innerText = "Erro: " + error.code;
+                    status.className = "mt-4 text-center text-xs font-mono text-red-600";
                 });
         }
 
-        // --- 6. APP LÓGICA ---
-        const ITENS = [
-            "Acompanhamento de cargas", "Acompanhamento de montadores", 
-            "Acompanhamento dos transportes - 1x1", "Análise da quilometragem planejada",
-            "Carregamentos Monitorados", "Imagens frota", 
-            "KPI distribuição e logística", "Monitoramento de aderências"
-        ];
-
-        function entrarApp() {
-            document.getElementById('userDisplay').innerText = usuarioAtual.email;
+        // --- APP ---
+        function entrarNoApp() {
+            document.getElementById('userEmailDisplay').innerText = usuarioAtual.email;
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('appScreen').classList.remove('hidden');
-            
-            const di = document.getElementById('dateInput');
-            di.value = dataAtual;
-            di.addEventListener('change', (e) => {
-                dataAtual = e.target.value;
-                carregarDados();
-            });
-            carregarDados();
+            iniciarLista();
         }
 
         function sair() {
@@ -233,10 +183,32 @@
             window.location.reload();
         }
 
-        function mudarData(delta) {
-            const date = new Date(dataAtual);
-            date.setDate(date.getDate() + delta);
-            dataAtual = date.toISOString().split('T')[0];
+        const ITENS = [
+            "Acompanhamento de cargas", "Acompanhamento de montadores", 
+            "Acompanhamento dos transportes - 1x1", "Análise da quilometragem planejada",
+            "Carregamentos Monitorados", "Imagens frota", 
+            "KPI distribuição e logística", "Monitoramento de aderências"
+        ];
+
+        function iniciarLista() {
+            const dateInput = document.getElementById('dateInput');
+            dateInput.value = dataAtual;
+            
+            // Remove listeners antigos clonando o elemento
+            const novoInput = dateInput.cloneNode(true);
+            dateInput.parentNode.replaceChild(novoInput, dateInput);
+            
+            novoInput.addEventListener('change', (e) => {
+                dataAtual = e.target.value;
+                carregarDados();
+            });
+            carregarDados();
+        }
+
+        function mudarData(dias) {
+            const d = new Date(dataAtual);
+            d.setDate(d.getDate() + dias);
+            dataAtual = d.toISOString().split('T')[0];
             document.getElementById('dateInput').value = dataAtual;
             carregarDados();
         }
@@ -244,75 +216,72 @@
         function carregarDados() {
             if (!usuarioAtual) return;
             db.collection("users").doc(usuarioAtual.uid).collection("logistica").doc(dataAtual)
-                .onSnapshot(doc => {
-                    const data = doc.exists ? doc.data() : {};
-                    renderList(data);
+                .onSnapshot((doc) => {
+                    const dados = doc.exists ? doc.data() : {};
+                    renderizar(dados);
                 });
         }
 
-        function toggle(item, val) {
-            if(navigator.vibrate) navigator.vibrate(10);
-            db.collection("users").doc(usuarioAtual.uid).collection("logistica").doc(dataAtual)
-                .set({ [item]: !val }, { merge: true });
+        function toggle(item, valorAtual) {
+            if (navigator.vibrate) navigator.vibrate(10);
+            const ref = db.collection("users").doc(usuarioAtual.uid).collection("logistica").doc(dataAtual);
+            ref.set({ [item]: !valorAtual }, { merge: true });
         }
 
-        function renderList(data) {
-            const list = document.getElementById('checklist');
-            list.innerHTML = '';
+        function renderizar(dados) {
+            const div = document.getElementById('lista');
+            div.innerHTML = '';
+            
             ITENS.forEach(item => {
-                const done = !!data[item];
-                const checkIcon = <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>;
-                const circleIcon = <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg>;
-                
-                const div = document.createElement('div');
-                div.className = list-item ${done ? 'checked-bg' : ''};
-                div.onclick = () => toggle(item, done);
-                div.innerHTML = `
-                    ${done ? checkIcon : circleIcon}
-                    <span style="font-weight:500; flex:1;" class="${done ? 'checked-text' : ''}">${item}</span>
+                const feito = !!dados[item];
+                div.innerHTML += `
+                    <div onclick="toggle('${item}', ${feito})" class="p-4 flex items-center gap-3 cursor-pointer transition-colors ${feito ? 'bg-red-50' : 'hover:bg-slate-50'} border-b border-slate-100">
+                        <div class="transition-transform ${feito ? 'text-green-600 scale-110' : 'text-slate-300'}">
+                            ${feito ? '<i data-lucide="check-circle-2" class="fill-green-100"></i>' : '<i data-lucide="circle"></i>'}
+                        </div>
+                        <span class="${feito ? 'line-through text-slate-400' : 'text-slate-700 font-medium'} select-none">${item}</span>
+                    </div>
                 `;
-                list.appendChild(div);
             });
+            if(window.lucide) lucide.createIcons();
         }
 
         function copiarResumo() {
-            const listItems = document.querySelectorAll('.list-item');
-            const df = dataAtual.split('-').reverse().join('/');
-            let txt = 📋 *Logística - ${df}*\n\n;
-            let ok = [], pend = [];
+            const itensDOM = document.querySelectorAll('#lista > div');
+            const dataF = dataAtual.split('-').reverse().join('/');
             
-            ITENS.forEach((item, idx) => {
-                const el = listItems[idx];
-                if(el && el.innerHTML.includes('stroke="#16a34a"')) ok.push(item);
-                else pend.push(item);
+            let texto = 📋 *Logística - ${dataF}*\n\n;
+            let feitos = [];
+            let pendentes = [];
+
+            ITENS.forEach(item => {
+                const domItem = Array.from(itensDOM).find(el => el.innerText.includes(item));
+                if (domItem && domItem.innerHTML.includes('text-green-600')) feitos.push(item);
+                else pendentes.push(item);
             });
-            
-            ok.forEach(i => txt += ✅ ${i}\n);
-            if(pend.length) {
-                txt += \n⏳ *Pendentes:*\n;
-                pend.forEach(i => txt += ⬜ ${i}\n);
+
+            feitos.forEach(i => texto += ✅ ${i}\n);
+            if (pendentes.length > 0) {
+                texto += \n⏳ *Pendentes:*\n;
+                pendentes.forEach(i => texto += ⬜ ${i}\n);
             }
-            
-            const t = document.createElement('textarea');
-            t.value = txt;
-            document.body.appendChild(t);
-            t.select();
-            document.execCommand('copy');
-            document.body.removeChild(t);
+
+            const area = document.createElement("textarea");
+            area.value = texto;
+            document.body.appendChild(area);
+            area.select();
+            document.execCommand("copy");
+            document.body.removeChild(area);
             alert("Resumo copiado!");
         }
 
         // Tecla Enter
-        document.getElementById('password').addEventListener('keyup', (e) => {
-            if(e.key === 'Enter') fazerLogin();
+        document.getElementById('password').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') cliqueEntrar();
         });
-        document.getElementById('email').addEventListener('keyup', (e) => {
-            if(e.key === 'Enter') document.getElementById('password').focus();
+        document.getElementById('email').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') document.getElementById('password').focus();
         });
-
-        // ARRANCAR
-        init();
-
     </script>
 </body>
 </html>
