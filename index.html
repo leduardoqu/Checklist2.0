@@ -5,125 +5,111 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rotina Logística</title>
     
-    <!-- ESTILO CSS INTERNO (Não depende de downloads externos) -->
     <style>
-        /* Reset básico para garantir visual igual em todos os celulares */
+        /* ESTILO CSS (O mesmo visual vermelho) */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        body { margin: 0; background-color: #f3f4f6; color: #1f2937; height: 100vh; display: flex; flex-direction: column; }
+        body { margin: 0; background-color: #f1f5f9; color: #1f2937; height: 100vh; display: flex; flex-direction: column; }
         .hidden { display: none !important; }
         
-        /* TELA DE LOGIN */
         .login-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .card { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-top: 5px solid #991b1b; text-align: center; }
         
-        /* FOTO PERFIL */
         .avatar-container { width: 80px; height: 80px; margin: 0 auto 15px; border-radius: 50%; overflow: hidden; border: 3px solid #fee2e2; background: #fff; position: relative; }
         .avatar-img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* FORMULÁRIO */
-        h2 { margin: 0 0 5px; color: #111; font-size: 22px; }
-        p.subtitle { margin: 0 0 20px; color: #666; font-size: 14px; }
-        
-        input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 16px; outline: none; transition: border 0.2s; }
+        input { width: 100%; padding: 14px; margin-bottom: 15px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 16px; outline: none; }
         input:focus { border-color: #991b1b; box-shadow: 0 0 0 3px rgba(153, 27, 27, 0.1); }
         
-        button { width: 100%; padding: 14px; background-color: #991b1b; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: opacity 0.2s; }
+        button { width: 100%; padding: 14px; background-color: #991b1b; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
         button:active { opacity: 0.8; transform: scale(0.98); }
-        button:disabled { background-color: #9ca3af; cursor: not-allowed; }
-
-        /* STATUS MESSAGE */
-        #statusMsg { margin-top: 15px; font-size: 12px; font-family: monospace; color: #6b7280; }
-
-        /* APP HEADER */
+        
         .header { background-color: #991b1b; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 10; }
-        .user-info { display: flex; align-items: center; gap: 10px; }
-        .mini-avatar { width: 34px; height: 34px; border-radius: 50%; background: #fff; border: 2px solid #fca5a5; overflow: hidden; }
-        .logout-btn { background: rgba(0,0,0,0.2); font-size: 12px; padding: 6px 12px; border-radius: 4px; width: auto; }
-
-        /* LISTA */
-        .content { padding: 15px; overflow-y: auto; flex: 1; }
-        .date-controls { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e5e7eb; }
-        .date-btn { background: none; color: #4b5563; width: auto; padding: 5px 15px; font-size: 18px; }
-        .date-display { border: none; font-weight: bold; font-size: 16px; color: #374151; text-align: center; width: 120px; }
         
-        .checklist-container { background: white; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb; }
-        .item-row { padding: 16px; border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.1s; }
-        .item-row:active { background-color: #f9fafb; }
-        .item-row:last-child { border-bottom: none; }
-        .item-checked { background-color: #fef2f2; }
-        .item-text { font-size: 15px; font-weight: 500; color: #374151; flex: 1; }
-        .item-checked .item-text { text-decoration: line-through; color: #9ca3af; }
-
-        /* SVG ICONS */
-        .icon { width: 24px; height: 24px; display: block; }
-        .icon-check { stroke: #16a34a; }
-        .icon-circle { stroke: #d1d5db; }
+        .list-item { background: white; padding: 16px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .checked { background-color: #fef2f2; text-decoration: line-through; color: #9ca3af; }
         
-        /* COPY BUTTON */
-        .copy-btn { margin-top: 20px; background: white; color: #991b1b; border: 2px solid #fee2e2; }
+        .date-nav { display: flex; justify-content: space-between; padding: 10px; background: white; margin-bottom: 5px; }
+        .date-display { border: none; text-align: center; font-weight: bold; font-size: 16px; color: #333; }
+        
+        /* Mensagem de Diagnóstico */
+        #diag { margin-top: 20px; font-size: 10px; color: #999; font-family: monospace; }
     </style>
+
+    <!-- MATADOR DE CACHE (Executa primeiro) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                    console.log("Service Worker antigo removido.");
+                }
+            });
+        }
+    </script>
 </head>
 <body>
 
-    <!-- 1. TELA DE LOGIN -->
+    <!-- TELA DE LOGIN -->
     <div id="loginScreen" class="login-wrapper">
         <div class="card">
             <div class="avatar-container">
                 <img src="./perfil.jpg" class="avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                <!-- Fallback Icon (SVG) -->
-                <div style="display:none; width:100%; height:100%; align-items:center; justify-content:center; background:#fff;">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#991b1b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                </div>
+                <div style="display:none; width:100%; height:100%; align-items:center; justify-content:center; color:#991b1b; font-weight:bold;">LOG</div>
             </div>
             
-            <h2>Logística</h2>
-            <p class="subtitle">Controlo de Operações</p>
+            <h2 style="margin:0 0 5px; color:#111;">Logística</h2>
+            <p style="margin:0 0 20px; color:#666; font-size:14px;">Controlo de Operações</p>
 
-            <div id="loginForm">
-                <input type="email" id="email" placeholder="E-mail">
-                <input type="password" id="password" placeholder="Palavra-passe">
-                <button id="btnEntrar" onclick="fazerLogin()">A CARREGAR...</button>
-            </div>
+            <!-- Botão já nasce habilitado -->
+            <input type="email" id="email" placeholder="E-mail">
+            <input type="password" id="password" placeholder="Palavra-passe">
+            <button id="btnEntrar" onclick="fazerLogin()">ENTRAR</button>
             
-            <div id="statusMsg">A iniciar sistema...</div>
+            <div id="diag">A aguardar rede...</div>
         </div>
     </div>
 
-    <!-- 2. TELA DO APLICATIVO -->
+    <!-- TELA APP -->
     <div id="appScreen" class="hidden">
         <div class="header">
-            <div class="user-info">
-                <div class="mini-avatar">
-                    <img src="./perfil.jpg" class="avatar-img" onerror="this.style.display='none'">
-                </div>
-                <div>
-                    <div style="font-weight:bold; font-size:14px; line-height:1.2;">Logística</div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:34px; height:34px; border-radius:50%; background:white; overflow:hidden;"><img src="./perfil.jpg" style="width:100%;height:100%;object-fit:cover"></div>
+                <div style="line-height:1.2;">
+                    <div style="font-weight:bold; font-size:14px;">Logística</div>
                     <div id="userDisplay" style="font-size:11px; opacity:0.8;">...</div>
                 </div>
             </div>
-            <button class="logout-btn" onclick="sair()">Sair</button>
+            <button onclick="sair()" style="background:rgba(0,0,0,0.2); font-size:12px; padding:5px 10px; width:auto;">Sair</button>
         </div>
 
-        <div class="content">
-            <div class="date-controls">
-                <button class="date-btn" onclick="mudarData(-1)">❮</button>
+        <div style="padding:15px; flex:1; overflow-y:auto;">
+            <div class="date-nav">
+                <button onclick="mudarData(-1)" style="border:none; background:none; font-size:20px;">❮</button>
                 <input type="date" id="dateInput" class="date-display">
-                <button class="date-btn" onclick="mudarData(1)">❯</button>
+                <button onclick="mudarData(1)" style="border:none; background:none; font-size:20px;">❯</button>
             </div>
 
-            <div id="lista" class="checklist-container"></div>
+            <div id="lista" style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;"></div>
 
-            <button class="copy-btn" onclick="copiarResumo()">COPIAR RESUMO</button>
+            <button onclick="copiarResumo()" style="margin-top:20px; background:white; color:#991b1b; border:2px solid #fee2e2;">COPIAR RESUMO</button>
         </div>
     </div>
 
-    <!-- 3. SCRIPTS ESSENCIAIS (NO FIM DO BODY PARA NÃO TRAVAR) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
+    <!-- CARREGAMENTO ASSÍNCRONO -->
     <script>
-        // CONFIGURAÇÃO FIREBASE (Do teu teste de sucesso)
+        const diag = document.getElementById('diag');
+        
+        // Carrega Scripts Manualmente
+        function carregarScript(url) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = url;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.body.appendChild(script);
+            });
+        }
+
         const firebaseConfig = {
             apiKey: "AIzaSyCgWfdAVTVFhKRS-BLWGJrIt68hdq-OMhg",
             authDomain: "logisticacloud-1cc32.firebaseapp.com",
@@ -133,106 +119,74 @@
             appId: "1:883823898286:web:6c22160dad0cd403a0873f"
         };
 
-        // VARIÁVEIS GLOBAIS
         let auth, db, usuarioAtual;
         let dataAtual = new Date().toISOString().split('T')[0];
-        
-        // ELEMENTOS DOM
-        const statusEl = document.getElementById('statusMsg');
-        const btnEntrar = document.getElementById('btnEntrar');
+        let sistemaPronto = false;
 
-        // --- SISTEMA DE LIMPEZA (GARANTIA CONTRA CACHE VELHO) ---
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                for(let registration of registrations) {
-                    registration.unregister(); // Apaga qualquer Service Worker antigo
-                }
-            });
-        }
-
-        // --- INICIALIZAÇÃO IMEDIATA ---
-        function initSystem() {
-            // Verifica se o Firebase baixou
-            if (typeof firebase === 'undefined') {
-                statusEl.innerText = "A aguardar conexão...";
-                statusEl.style.color = "orange";
-                // Tenta novamente em breve
-                setTimeout(initSystem, 500);
-                return;
-            }
-
+        // INICIA DOWNLOAD EM PLANO DE FUNDO
+        (async function iniciar() {
             try {
-                // Previne reinicialização múltipla
-                if (!firebase.apps.length) {
-                    firebase.initializeApp(firebaseConfig);
-                }
+                diag.innerText = "A baixar recursos...";
+                await carregarScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+                await carregarScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
+                await carregarScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js');
+                
+                firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
                 db = firebase.firestore();
+                sistemaPronto = true;
+                
+                diag.innerText = "Conectado. Pronto.";
+                diag.style.color = "green";
 
-                statusEl.innerText = "Sistema Pronto. Pode entrar.";
-                statusEl.style.color = "green";
-                btnEntrar.innerText = "ENTRAR";
-                btnEntrar.disabled = false;
-
-                // Monitora Login (Se já estiver logado, entra direto)
                 auth.onAuthStateChanged(user => {
-                    if (user) {
+                    if(user) {
                         usuarioAtual = user;
-                        statusEl.innerText = "Bem-vindo de volta...";
-                        entrarNoApp();
+                        entrarApp();
                     }
                 });
 
-            } catch (error) {
-                statusEl.innerText = "Erro Config: " + error.message;
-                statusEl.style.color = "red";
+            } catch (e) {
+                diag.innerText = "Falha de Rede. Tente 4G.";
+                diag.style.color = "red";
             }
-        }
+        })();
 
-        // Começa a rodar assim que o navegador lê esta linha
-        initSystem();
-
-        // --- FUNÇÕES DE LOGIN ---
+        // --- LOGIN ---
         function fazerLogin() {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('password').value;
-
-            if (!email || !pass) {
-                alert("Preencha e-mail e palavra-passe.");
+            // Se o usuário clicar antes do sistema carregar
+            if (!sistemaPronto) {
+                alert("Aguarde um momento, o sistema está a conectar...");
                 return;
             }
 
-            btnEntrar.innerText = "A VERIFICAR...";
-            btnEntrar.disabled = true;
-            statusEl.innerText = "A contactar servidor...";
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            const btn = document.getElementById('btnEntrar');
+
+            if (!email || !pass) {
+                alert("Preencha todos os campos.");
+                return;
+            }
+
+            btn.innerText = "A VERIFICAR...";
+            btn.disabled = true;
 
             auth.signInWithEmailAndPassword(email, pass)
-                .then(() => {
-                    statusEl.innerText = "Sucesso!";
-                    // onAuthStateChanged vai tratar da transição
-                })
                 .catch(err => {
-                    // Tenta criar conta se usuário não existir
                     if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-                        statusEl.innerText = "Criando registo...";
                         return auth.createUserWithEmailAndPassword(email, pass);
                     }
                     throw err;
                 })
                 .catch(err => {
-                    btnEntrar.innerText = "ENTRAR";
-                    btnEntrar.disabled = false;
-                    
-                    let msg = err.code;
-                    if (err.code === 'auth/network-request-failed') msg = "Erro de Internet. Verifique a conexão.";
-                    if (err.code === 'auth/wrong-password') msg = "Senha incorreta.";
-                    
-                    statusEl.innerText = "Erro: " + msg;
-                    statusEl.style.color = "red";
+                    btn.innerText = "ENTRAR";
+                    btn.disabled = false;
+                    alert("Erro: " + err.code);
                 });
         }
 
-        // --- FUNÇÕES DO APP ---
+        // --- APP ---
         const ITENS = [
             "Acompanhamento de cargas", "Acompanhamento de montadores", 
             "Acompanhamento dos transportes - 1x1", "Análise da quilometragem planejada",
@@ -240,90 +194,77 @@
             "KPI distribuição e logística", "Monitoramento de aderências"
         ];
 
-        function entrarNoApp() {
+        function entrarApp() {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('appScreen').classList.remove('hidden');
             document.getElementById('userDisplay').innerText = usuarioAtual.email;
             
-            const dateInput = document.getElementById('dateInput');
-            dateInput.value = dataAtual;
-            dateInput.addEventListener('change', (e) => {
+            const di = document.getElementById('dateInput');
+            di.value = dataAtual;
+            di.addEventListener('change', (e) => {
                 dataAtual = e.target.value;
                 carregarDados();
             });
             carregarDados();
         }
 
-        function sair() {
-            auth.signOut();
-            window.location.reload();
+        function carregarDados() {
+            if(!usuarioAtual) return;
+            db.collection("users").doc(usuarioAtual.uid).collection("logistica").doc(dataAtual)
+                .onSnapshot(doc => {
+                    const data = doc.exists ? doc.data() : {};
+                    renderizar(data);
+                });
         }
 
-        function mudarData(delta) {
-            const d = new Date(dataAtual);
-            d.setDate(d.getDate() + delta);
-            dataAtual = d.toISOString().split('T')[0];
+        function toggle(item, val) {
+            if(navigator.vibrate) navigator.vibrate(10);
+            db.collection("users").doc(usuarioAtual.uid).collection("logistica").doc(dataAtual)
+                .set({ [item]: !val }, { merge: true });
+        }
+
+        function renderizar(data) {
+            const list = document.getElementById('lista');
+            list.innerHTML = '';
+            ITENS.forEach(item => {
+                const done = !!data[item];
+                const div = document.createElement('div');
+                div.className = list-item ${done ? 'checked' : ''};
+                div.onclick = () => toggle(item, done);
+                div.innerHTML = `
+                    <span style="font-size:20px;">${done ? '✅' : '⬜'}</span>
+                    <span style="font-weight:500; flex:1;">${item}</span>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function mudarData(d) {
+            const date = new Date(dataAtual);
+            date.setDate(date.getDate() + d);
+            dataAtual = date.toISOString().split('T')[0];
             document.getElementById('dateInput').value = dataAtual;
             carregarDados();
         }
 
-        function carregarDados() {
-            if (!usuarioAtual) return;
-            db.collection("users").doc(usuarioAtual.uid).collection("logistica").doc(dataAtual)
-                .onSnapshot(doc => {
-                    const data = doc.exists ? doc.data() : {};
-                    renderLista(data);
-                });
-        }
-
-        function toggle(item, valorAtual) {
-            if (navigator.vibrate) navigator.vibrate(10);
-            db.collection("users").doc(usuarioAtual.uid).collection("logistica").doc(dataAtual)
-                .set({ [item]: !valorAtual }, { merge: true });
-        }
-
-        function renderLista(data) {
-            const lista = document.getElementById('lista');
-            lista.innerHTML = '';
-            
-            ITENS.forEach(item => {
-                const feito = !!data[item];
-                const div = document.createElement('div');
-                div.className = item-row ${feito ? 'item-checked' : ''};
-                div.onclick = () => toggle(item, feito);
-                
-                // Ícones SVG "Hardcoded" (Não precisa baixar nada)
-                const checkIcon = <svg class="icon icon-check" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>;
-                const circleIcon = <svg class="icon icon-circle" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>;
-
-                div.innerHTML = `
-                    ${feito ? checkIcon : circleIcon}
-                    <span class="item-text ${feito ? 'checked-text' : ''}">${item}</span>
-                `;
-                lista.appendChild(div);
-            });
-        }
-
         function copiarResumo() {
-            const dataF = dataAtual.split('-').reverse().join('/');
-            let txt = 📋 *Logística - ${dataF}*\n\n;
-            let ok = [], pend = [];
+            const items = document.querySelectorAll('.list-item');
+            const df = dataAtual.split('-').reverse().join('/');
+            let txt = 📋 *Logística - ${df}*\n\n;
+            let ok=[], pend=[];
             
-            // Verifica o estado atual na tela (mais rápido)
-            const rows = document.querySelectorAll('.item-row');
-            rows.forEach(row => {
-                const texto = row.querySelector('.item-text').innerText;
-                if (row.classList.contains('item-checked')) ok.push(texto);
-                else pend.push(texto);
+            ITENS.forEach((nome, i) => {
+                if(items[i].classList.contains('checked')) ok.push(nome);
+                else pend.push(nome);
             });
-
+            
             ok.forEach(i => txt += ✅ ${i}\n);
-            if (pend.length) {
+            if(pend.length) {
                 txt += \n⏳ *Pendentes:*\n;
                 pend.forEach(i => txt += ⬜ ${i}\n);
             }
-
-            const area = document.createElement('textarea');
+            
+            const area = document.createElement("textarea");
             area.value = txt;
             document.body.appendChild(area);
             area.select();
@@ -332,10 +273,13 @@
             alert("Resumo copiado!");
         }
 
-        // Tecla Enter nos Inputs
+        function sair() {
+            auth.signOut();
+            window.location.reload();
+        }
+        
+        // Enter Key
         document.getElementById('password').addEventListener('keyup', e => { if(e.key==='Enter') fazerLogin() });
-        document.getElementById('email').addEventListener('keyup', e => { if(e.key==='Enter') document.getElementById('password').focus() });
-
     </script>
 </body>
 </html>
