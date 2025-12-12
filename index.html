@@ -6,8 +6,8 @@
     <title>Rotina Logística</title>
     
     <style>
-        /* ESTILO (CSS Puro) */
-        * { box-sizing: border-box; font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        /* ESTILO PURO (Carrega instantaneamente) */
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; background-color: #f1f5f9; color: #333; height: 100vh; display: flex; flex-direction: column; }
         .hidden { display: none !important; }
         
@@ -27,20 +27,16 @@
         .avatar { width: 90px; height: 90px; margin: 0 auto 20px; border-radius: 50%; border: 4px solid #fee2e2; overflow: hidden; background: #fff; display: flex; align-items: center; justify-content: center; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* App Header */
-        .app-header { background: #991b1b; color: white; padding: 15px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        /* Rodapé de Diagnóstico */
+        #sys-log { font-size: 11px; color: #64748b; margin-top: 20px; text-align: center; font-family: monospace; border-top: 1px solid #e2e8f0; padding-top: 10px; width: 100%; max-width: 400px; }
         
-        /* Lista */
+        /* App UI */
+        .app-header { background: #991b1b; color: white; padding: 15px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .list-item { background: white; padding: 16px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px; cursor: pointer; }
         .checked-bg { background-color: #fef2f2; }
         .checked-text { text-decoration: line-through; color: #94a3b8; }
-        
-        /* Date Nav */
         .date-nav { background: white; margin: 15px; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
         .date-display { border: none; font-size: 16px; font-weight: bold; text-align: center; color: #333; background: transparent; width: 140px; }
-
-        /* Rodapé de Diagnóstico */
-        #sys-log { font-size: 10px; color: #64748b; margin-top: 20px; text-align: center; font-family: monospace; border-top: 1px solid #e2e8f0; padding-top: 10px; width: 100%; max-width: 400px; }
     </style>
 </head>
 <body>
@@ -50,7 +46,7 @@
         <div class="card">
             <div class="avatar">
                 <img src="./perfil.jpg" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
-                <!-- Ícone Backup (SVG) -->
+                <!-- Ícone Backup (SVG Inline) -->
                 <svg style="display:none; width:40px; height:40px;" viewBox="0 0 24 24" fill="none" stroke="#991b1b" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             </div>
             
@@ -60,7 +56,7 @@
             <div id="form-area">
                 <input type="email" id="email" placeholder="E-mail">
                 <input type="password" id="password" placeholder="Palavra-passe">
-                <button id="btnEntrar" onclick="fazerLogin()">A CARREGAR...</button>
+                <button id="btnEntrar" onclick="fazerLogin()" disabled>A INICIAR...</button>
             </div>
             
             <p id="errorMsg" style="color: #ef4444; font-size: 13px; text-align: center; margin-top: 15px; font-weight: bold; display: none;"></p>
@@ -82,13 +78,13 @@
                     <div id="userDisplay" style="font-size:10px; opacity:0.8;">...</div>
                 </div>
             </div>
-            <button onclick="sair()" style="background:rgba(0,0,0,0.2); width:auto; padding:5px 10px; font-size:12px;">Sair</button>
+            <button onclick="sair()" style="background:rgba(0,0,0,0.2); width:auto; padding:5px 10px; font-size:12px; border:none; color:white;">Sair</button>
         </div>
 
         <div class="date-nav">
-            <button onclick="mudarData(-1)" style="background:none; color:#64748b; width:auto; font-size:20px;">❮</button>
+            <button onclick="mudarData(-1)" style="background:none; border:none; color:#64748b; width:auto; font-size:20px;">❮</button>
             <input type="date" id="dateInput" class="date-display">
-            <button onclick="mudarData(1)" style="background:none; color:#64748b; width:auto; font-size:20px;">❯</button>
+            <button onclick="mudarData(1)" style="background:none; border:none; color:#64748b; width:auto; font-size:20px;">❯</button>
         </div>
 
         <div id="checklist" style="margin:0 15px; background:white; border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.05);"></div>
@@ -98,22 +94,32 @@
         </div>
     </div>
 
-    <!-- SCRIPTS NO FINAL DO CORPO -->
-    
-    <!-- 1. Firebase (Carregamento Síncrono para garantir ordem) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-    <!-- 2. Lógica Principal -->
+    <!-- O JAVASCRIPT ESTÁ AQUI EMBAIXO E CARREGA DINAMICAMENTE -->
     <script>
-        // Função de Log
-        function log(msg) {
-            document.getElementById('sys-log').innerText = "Estado: " + msg;
+        // --- 1. FUNÇÕES DE LOG ---
+        function log(msg, color) {
+            const el = document.getElementById('sys-log');
+            el.innerText = "Estado: " + msg;
+            if(color) el.style.color = color;
             console.log(msg);
         }
 
-        // Configuração
+        // PROVA DE VIDA IMEDIATA
+        log("JS Iniciado. A preparar download...", "blue");
+
+        // --- 2. CARREGADOR DINÂMICO ---
+        function loadScript(url) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = url;
+                script.async = true;
+                script.onload = () => resolve(url);
+                script.onerror = () => reject(url);
+                document.body.appendChild(script);
+            });
+        }
+
+        // --- 3. CONFIGURAÇÃO FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyCgWfdAVTVFhKRS-BLWGJrIt68hdq-OMhg",
             authDomain: "logisticacloud-1cc32.firebaseapp.com",
@@ -123,59 +129,50 @@
             appId: "1:883823898286:web:6c22160dad0cd403a0873f"
         };
 
-        let auth, db;
-        let checkInterval;
-        let tentativas = 0;
+        let auth, db, usuarioAtual;
+        let dataAtual = new Date().toISOString().split('T')[0];
 
-        // INICIALIZAÇÃO ATIVA
-        function iniciarSistema() {
-            log("A verificar bibliotecas...");
-
-            // Verifica se o Firebase carregou
-            if (typeof firebase !== 'undefined') {
-                clearInterval(checkInterval); // Para de verificar
-                log("Firebase detetado. A conectar...");
+        // --- 4. INICIALIZAÇÃO ASSÍNCRONA ---
+        async function init() {
+            log("A baixar Google Services...");
+            
+            try {
+                // Tenta baixar um por um. Se a rede bloquear, vai cair no 'catch'.
+                await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+                await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
+                await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js');
                 
-                try {
-                    firebase.initializeApp(firebaseConfig);
-                    auth = firebase.auth();
-                    db = firebase.firestore();
-                    
-                    log("Sistema Pronto (v1.5)");
-                    habilitarBotao();
-                    
-                    // Listener de Auth
-                    auth.onAuthStateChanged(user => {
-                        if (user) {
-                            log("Utilizador encontrado: " + user.email);
-                            entrarApp(user);
-                        }
-                    });
+                log("Serviços carregados. A conectar...");
+                
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
 
-                } catch (e) {
-                    log("Erro Config: " + e.message);
-                }
-            } else {
-                tentativas++;
-                log("A carregar recursos (" + tentativas + ")...");
-                if (tentativas > 10) {
-                    log("ERRO: Internet lenta ou bloqueio.");
-                    document.getElementById('btnEntrar').innerText = "ERRO DE REDE";
-                    document.getElementById('btnEntrar').style.background = "#64748b";
-                }
+                log("Sistema Online. Pronto.", "green");
+                
+                const btn = document.getElementById('btnEntrar');
+                btn.innerText = "ENTRAR";
+                btn.disabled = false;
+
+                auth.onAuthStateChanged(user => {
+                    if (user) {
+                        usuarioAtual = user;
+                        entrarApp();
+                    }
+                });
+
+            } catch (error) {
+                log("FALHA: Rede bloqueou o Google.", "red");
+                const btn = document.getElementById('btnEntrar');
+                btn.innerText = "SEM REDE";
+                btn.style.backgroundColor = "#64748b";
+                
+                document.getElementById('errorMsg').style.display = "block";
+                document.getElementById('errorMsg').innerText = "A rede da empresa bloqueou o carregamento do sistema.";
             }
         }
 
-        // Inicia o "radar" a cada 300ms
-        checkInterval = setInterval(iniciarSistema, 300);
-
-        function habilitarBotao() {
-            const btn = document.getElementById('btnEntrar');
-            btn.innerText = "ENTRAR";
-            btn.disabled = false;
-        }
-
-        // --- LOGIN ---
+        // --- 5. FUNÇÕES DE LOGIN ---
         function fazerLogin() {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('password').value;
@@ -188,16 +185,13 @@
                 return;
             }
 
-            log("A enviar pedido...");
             btn.innerText = "A VERIFICAR...";
             btn.disabled = true;
             errBox.style.display = 'none';
 
             auth.signInWithEmailAndPassword(email, pass)
-                .then(() => log("Login Sucesso!"))
                 .catch(err => {
                     if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-                        log("Conta nova. A criar...");
                         return auth.createUserWithEmailAndPassword(email, pass);
                     }
                     throw err;
@@ -205,21 +199,14 @@
                 .catch(err => {
                     btn.innerText = "ENTRAR";
                     btn.disabled = false;
-                    log("Erro Login: " + err.code);
-                    
-                    let msg = "Erro desconhecido";
-                    if(err.code === 'auth/network-request-failed') msg = "Erro de Conexão";
-                    if(err.code === 'auth/wrong-password') msg = "Senha Incorreta";
-                    
                     errBox.style.display = 'block';
-                    errBox.innerText = msg;
+                    let msg = err.code;
+                    if(msg === 'auth/network-request-failed') msg = "Erro de conexão (Firewall).";
+                    errBox.innerText = "Erro: " + msg;
                 });
         }
 
-        // --- APP ---
-        let currentDate = new Date().toISOString().split('T')[0];
-        let currentUser = null;
-
+        // --- 6. APP LÓGICA ---
         const ITENS = [
             "Acompanhamento de cargas", "Acompanhamento de montadores", 
             "Acompanhamento dos transportes - 1x1", "Análise da quilometragem planejada",
@@ -227,16 +214,15 @@
             "KPI distribuição e logística", "Monitoramento de aderências"
         ];
 
-        function entrarApp(user) {
-            currentUser = user;
-            document.getElementById('userDisplay').innerText = user.email;
+        function entrarApp() {
+            document.getElementById('userDisplay').innerText = usuarioAtual.email;
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('appScreen').classList.remove('hidden');
             
             const di = document.getElementById('dateInput');
-            di.value = currentDate;
+            di.value = dataAtual;
             di.addEventListener('change', (e) => {
-                currentDate = e.target.value;
+                dataAtual = e.target.value;
                 carregarDados();
             });
             carregarDados();
@@ -247,17 +233,17 @@
             window.location.reload();
         }
 
-        function mudarData(d) {
-            const date = new Date(currentDate);
-            date.setDate(date.getDate() + d);
-            currentDate = date.toISOString().split('T')[0];
-            document.getElementById('dateInput').value = currentDate;
+        function mudarData(delta) {
+            const date = new Date(dataAtual);
+            date.setDate(date.getDate() + delta);
+            dataAtual = date.toISOString().split('T')[0];
+            document.getElementById('dateInput').value = dataAtual;
             carregarDados();
         }
 
         function carregarDados() {
-            if(!currentUser) return;
-            db.collection("users").doc(currentUser.uid).collection("logistica").doc(currentDate)
+            if (!usuarioAtual) return;
+            db.collection("users").doc(usuarioAtual.uid).collection("logistica").doc(dataAtual)
                 .onSnapshot(doc => {
                     const data = doc.exists ? doc.data() : {};
                     renderList(data);
@@ -266,7 +252,7 @@
 
         function toggle(item, val) {
             if(navigator.vibrate) navigator.vibrate(10);
-            db.collection("users").doc(currentUser.uid).collection("logistica").doc(currentDate)
+            db.collection("users").doc(usuarioAtual.uid).collection("logistica").doc(dataAtual)
                 .set({ [item]: !val }, { merge: true });
         }
 
@@ -275,7 +261,6 @@
             list.innerHTML = '';
             ITENS.forEach(item => {
                 const done = !!data[item];
-                // Ícones SVG Inline
                 const checkIcon = <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>;
                 const circleIcon = <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg>;
                 
@@ -291,9 +276,8 @@
         }
 
         function copiarResumo() {
-            // Lógica simples de cópia
             const listItems = document.querySelectorAll('.list-item');
-            const df = currentDate.split('-').reverse().join('/');
+            const df = dataAtual.split('-').reverse().join('/');
             let txt = 📋 *Logística - ${df}*\n\n;
             let ok = [], pend = [];
             
@@ -325,6 +309,10 @@
         document.getElementById('email').addEventListener('keyup', (e) => {
             if(e.key === 'Enter') document.getElementById('password').focus();
         });
+
+        // ARRANCAR
+        init();
+
     </script>
 </body>
 </html>
