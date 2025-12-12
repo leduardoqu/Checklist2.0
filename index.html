@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rotina Logística</title>
+    
+    <!-- FIREBASE (CDN Google - Sabemos que funciona) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        /* ESTILO PURO (Sem Tailwind para evitar bloqueios) */
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background-color: #f1f5f9; color: #333; height: 100vh; display: flex; flex-direction: column; }
+        
+        .hidden { display: none !important; }
+        
+        /* Containers */
+        .center-screen { display: flex; align-items: center; justify-content: center; height: 100%; padding: 20px; }
+        .card { background: white; width: 100%; max-width: 400px; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 5px solid #991b1b; }
+        
+        /* Elementos */
+        h1 { margin: 0; color: #1e293b; font-size: 24px; text-align: center; }
+        p { text-align: center; color: #64748b; margin-top: 5px; font-size: 14px; }
+        
+        input { width: 100%; padding: 14px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; outline: none; transition: border 0.2s; }
+        input:focus { border-color: #991b1b; box-shadow: 0 0 0 3px rgba(153, 27, 27, 0.1); }
+        
+        button { width: 100%; padding: 14px; background-color: #991b1b; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        button:active { transform: scale(0.98); background-color: #7f1d1d; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        /* Foto */
+        .avatar { width: 80px; height: 80px; margin: 0 auto 20px; border-radius: 50%; border: 4px solid #fee2e2; overflow: hidden; background: #f8fafc; display: flex; align-items: center; justify-content: center; }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* App Header */
+        .app-header { background: #991b1b; color: white; padding: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 100; }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        
+        /* Lista */
+        .list-item { background: white; padding: 16px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .list-item:active { background: #fef2f2; }
+        .checked { text-decoration: line-through; color: #94a3b8; }
+        .checked-bg { background-color: #fef2f2; }
+        
+        /* Controles Data */
+        .date-nav { background: white; margin: 15px; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .date-btn { background: none; color: #64748b; width: auto; padding: 5px 15px; }
+        .date-display { border: none; font-size: 16px; font-weight: bold; text-align: center; color: #333; background: transparent; }
+
+        /* Debug Box */
+        #error-box { background: #fee2e2; color: #991b1b; padding: 10px; margin-bottom: 15px; border-radius: 6px; font-size: 12px; display: none; border: 1px solid #ef4444; }
+    </style>
+</head>
+<body>
+
+    <!-- CAIXA DE ERRO GLOBAL (Aparece se o JS falhar) -->
+    <div id="error-box"></div>
+
+    <!-- ECRÃ DE LOGIN -->
+    <div id="loginScreen" class="center-screen">
+        <div class="card">
+            <div class="avatar">
+                <img src="./perfil.jpg" onerror="this.style.display='none'">
+                <!-- Ícone SVG Fallback -->
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#991b1b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; z-index:-1;">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </div>
+            
+            <h1>Logística</h1>
+            <p>Controlo de Operações</p>
+            <br>
+
+            <div id="form-area">
+                <input type="email" id="email" placeholder="E-mail">
+                <input type="password" id="password" placeholder="Palavra-passe">
+                <button id="btnEntrar" onclick="handleLogin()">ENTRAR</button>
+            </div>
+            
+            <p id="status" style="font-size: 12px; margin-top: 15px;">A carregar sistema...</p>
+        </div>
+    </div>
+
+    <!-- ECRÃ DA APLICAÇÃO -->
+    <div id="appScreen" class="hidden">
+        <div class="app-header">
+            <div class="header-left">
+                <div style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: #7f1d1d; border: 1px solid #fca5a5;">
+                    <img src="./perfil.jpg" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">
+                </div>
+                <div>
+                    <div style="font-weight: bold; line-height: 1.1;">Logística</div>
+                    <div id="userEmail" style="font-size: 10px; opacity: 0.8;">...</div>
+                </div>
+            </div>
+            <button onclick="logout()" style="width: auto; padding: 6px 12px; font-size: 12px; background: rgba(0,0,0,0.2);">Sair</button>
+        </div>
+
+        <div class="date-nav">
+            <button class="date-btn" onclick="changeDate(-1)">❮</button>
+            <input type="date" id="dateInput" class="date-display">
+            <button class="date-btn" onclick="changeDate(1)">❯</button>
+        </div>
+
+        <div id="checklist" style="margin: 0 15px; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <!-- Itens aqui -->
+        </div>
+
+        <div style="padding: 15px;">
+            <button onclick="copySummary()" style="background: white; color: #991b1b; border: 2px solid #fee2e2;">
+                COPIAR RESUMO
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. CAPTURA DE ERROS GLOBAIS ---
+        window.onerror = function(msg, url, line) {
+            const box = document.getElementById('error-box');
+            box.style.display = 'block';
+            box.innerText = "ERRO TÉCNICO: " + msg;
+            return false;
+        };
+
+        // --- 2. CONFIGURAÇÃO FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCgWfdAVTVFhKRS-BLWGJrIt68hdq-OMhg",
+            authDomain: "logisticacloud-1cc32.firebaseapp.com",
+            projectId: "logisticacloud-1cc32",
+            storageBucket: "logisticacloud-1cc32.firebasestorage.app",
+            messagingSenderId: "883823898286",
+            appId: "1:883823898286:web:6c22160dad0cd403a0873f"
+        };
+
+        let auth, db;
+        let currentUser = null;
+        let currentDate = new Date().toISOString().split('T')[0];
+
+        const ITENS = [
+            "Acompanhamento de cargas", "Acompanhamento de montadores", 
+            "Acompanhamento dos transportes - 1x1", "Análise da quilometragem planejada",
+            "Carregamentos Monitorados", "Imagens frota", 
+            "KPI distribuição e logística", "Monitoramento de aderências"
+        ];
+
+        // --- 3. INICIALIZAÇÃO SEGURA ---
+        window.onload = function() {
+            try {
+                if (typeof firebase === 'undefined') throw new Error("Firebase não carregou.");
+                
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
+
+                document.getElementById('status').innerText = "Sistema Pronto.";
+                document.getElementById('status').style.color = "green";
+
+                // Verificar Login
+                auth.onAuthStateChanged(user => {
+                    if (user) {
+                        currentUser = user;
+                        document.getElementById('status').innerText = "A entrar...";
+                        showApp();
+                    }
+                });
+
+                // Tecla Enter
+                document.getElementById('password').addEventListener('keyup', (e) => {
+                    if(e.key === 'Enter') handleLogin();
+                });
+
+            } catch (e) {
+                document.getElementById('status').innerText = "Falha: " + e.message;
+                document.getElementById('status').style.color = "red";
+                document.getElementById('btnEntrar').disabled = true;
+                document.getElementById('btnEntrar').style.background = "#ccc";
+            }
+        };
+
+        // --- 4. LOGIN ---
+        function handleLogin() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            const btn = document.getElementById('btnEntrar');
+            const status = document.getElementById('status');
+
+            if (!email || !pass) {
+                status.innerText = "Preencha todos os campos";
+                status.style.color = "red";
+                return;
+            }
+
+            btn.innerText = "A verificar...";
+            btn.disabled = true;
+            status.innerText = "A contactar servidor...";
+
+            auth.signInWithEmailAndPassword(email, pass)
+                .catch(err => {
+                    if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+                        status.innerText = "Conta nova. A criar...";
+                        return auth.createUserWithEmailAndPassword(email, pass);
+                    }
+                    throw err;
+                })
+                .catch(err => {
+                    btn.innerText = "ENTRAR";
+                    btn.disabled = false;
+                    status.innerText = "Erro: " + err.code;
+                    status.style.color = "red";
+                });
+        }
+
+        // --- 5. LÓGICA DO APP ---
+        function showApp() {
+            document.getElementById('userEmail').innerText = currentUser.email;
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('appScreen').classList.remove('hidden');
+            
+            const dateInput = document.getElementById('dateInput');
+            dateInput.value = currentDate;
+            dateInput.addEventListener('change', (e) => {
+                currentDate = e.target.value;
+                loadData();
+            });
+            
+            loadData();
+        }
+
+        function logout() {
+            auth.signOut();
+            window.location.reload();
+        }
+
+        function changeDate(delta) {
+            const d = new Date(currentDate);
+            d.setDate(d.getDate() + delta);
+            currentDate = d.toISOString().split('T')[0];
+            document.getElementById('dateInput').value = currentDate;
+            loadData();
+        }
+
+        function loadData() {
+            if (!currentUser) return;
+            db.collection("users").doc(currentUser.uid).collection("logistica").doc(currentDate)
+                .onSnapshot(doc => {
+                    const data = doc.exists ? doc.data() : {};
+                    renderList(data);
+                });
+        }
+
+        function toggle(item, currentVal) {
+            if(navigator.vibrate) navigator.vibrate(10);
+            db.collection("users").doc(currentUser.uid).collection("logistica").doc(currentDate)
+                .set({ [item]: !currentVal }, { merge: true });
+        }
+
+        function renderList(data) {
+            const list = document.getElementById('checklist');
+            list.innerHTML = '';
+            
+            ITENS.forEach(item => {
+                const done = !!data[item];
+                // Ícones SVG Inline (Seguro contra bloqueios)
+                const icon = done 
+                    ? <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    : <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg>;
+
+                const div = document.createElement('div');
+                div.className = list-item ${done ? 'checked-bg' : ''};
+                div.onclick = () => toggle(item, done);
+                div.innerHTML = `
+                    ${icon}
+                    <span class="${done ? 'checked' : ''}" style="font-weight:500; flex:1;">${item}</span>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function copySummary() {
+            const listItems = document.querySelectorAll('.list-item');
+            const dateF = currentDate.split('-').reverse().join('/');
+            let text = 📋 *Logística - ${dateF}*\n\n;
+            let done = [], pending = [];
+
+            ITENS.forEach((item, index) => {
+                const el = listItems[index];
+                if (el && el.innerHTML.includes('stroke="#16a34a"')) done.push(item);
+                else pending.push(item);
+            });
+
+            done.forEach(i => text += ✅ ${i}\n);
+            if(pending.length) {
+                text += \n⏳ *Pendentes:*\n;
+                pending.forEach(i => text += ⬜ ${i}\n);
+            }
+
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            alert("Resumo copiado!");
+        }
+    </script>
+</body>
+</html>
